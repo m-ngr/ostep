@@ -1,5 +1,16 @@
 # Unix Utilities
 
+## Project Status
+
+| Project  | Status   | Tests  |
+|----------|----------|--------|
+| [wcat](./wcat/wcat.c)   | ✅ Finished | ✅ 100% |
+| [wgrep](./wgrep/wgrep.c)  | ✅ Finished | ✅ 100% |
+| [wzip](./wzip/wzip.c)   | ✅ Finished | ✅ 100% |
+| [wunzip](./wunzip/wunzip.c) | ✅ Finished | ✅ 100% |
+
+## Intro
+
 **Before beginning:** Read this [lab tutorial](http://pages.cs.wisc.edu/~remzi/OSTEP/lab-tutorial.pdf); it has some useful tips for programming in the C environment.
 
 In this project, you'll build a few different UNIX utilities, simple versions
