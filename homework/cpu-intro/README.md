@@ -135,8 +135,6 @@ In that specific case it would be better to run Process 1 after I/O finishes dir
 
 **Answer:** Total cycles are 21 for the 4 processes to complete.
 
-In that specific case it would be better to run Process 1 after I/O finishes directly, it would result in a better CPU utilization
-
 | Time | Process 1 | Process 2 | Process 3 | Process 4 | Comment                                |
 | ---- | --------- | --------- | --------- | --------- | -------------------------------------- |
 | 1    | Running   | Ready     | Ready     | Ready     | I/O Syscall                            |
@@ -161,6 +159,129 @@ In that specific case it would be better to run Process 1 after I/O finishes dir
 | 20   | Blocked   | Done      | Done      | Running   | End of Process 4                       |
 | 21   | Running   | Done      | Done      | Done      | I/O Syscall Returns (End of Process 1) |
 
+**In that specific case:** it would be better to run Process 1 after I/O finishes directly, it would result in a better CPU utilization
+
+**The counter case:** let say we have process 1 (io, cpu x6) and process 2 (cpu x6, io)
+
+- M1: `IO_RUN_LATER` (takes 16 cycles)
+- M2: `IO_RUN_IMMEDIATE` (takes 21 cycles)
+
+| Time | M1:P1      | M1:P2      | M2:P1      | M2:P2      |
+| ---- | ---------- | ---------- | ---------- | ---------- |
+| 1    | Run:IO     | Ready      | Run:IO     | Ready      |
+| 2    | Blocked    | Run:CPU_1  | Blocked    | Run:CPU_1  |
+| 3    | Blocked    | Run:CPU_2  | Blocked    | Run:CPU_2  |
+| 4    | Blocked    | Run:CPU_3  | Blocked    | Run:CPU_3  |
+| 5    | Blocked    | Run:CPU_4  | Blocked    | Run:CPU_4  |
+| 6    | Blocked    | Run:CPU_5  | Blocked    | Run:CPU_5  |
+| 7    | Ready      | Run:CPU_6  | Run:IO_END | Ready      |
+| 8    | Ready      | Run:IO     | Run:CPU_1  | Ready      |
+| 9    | Run:IO_END | Blocked    | Run:CPU_2  | Ready      |
+| 10   | Run:CPU_1  | Blocked    | Run:CPU_3  | Ready      |
+| 11   | Run:CPU_2  | Blocked    | Run:CPU_4  | Ready      |
+| 12   | Run:CPU_3  | Blocked    | Run:CPU_5  | Ready      |
+| 13   | Run:CPU_4  | Blocked    | Run:CPU_6  | Ready      |
+| 14   | Run:CPU_5  | Ready      | Done       | Run:CPU_6  |
+| 15   | Run:CPU_6  | Ready      | Done       | Run:IO     |
+| 16   | Done       | Run:IO_END | Done       | Blocked    |
+| 17   | Done       | Done       | Done       | Blocked    |
+| 18   | Done       | Done       | Done       | Blocked    |
+| 19   | Done       | Done       | Done       | Blocked    |
+| 20   | Done       | Done       | Done       | Blocked    |
+| 21   | Done       | Done       | Done       | Run:IO_END |
+
+**The general case:** it might be a good idea to actually re-run the process that issued an I/O when finished, there is a higher chance that this process will issue another I/O operation (which gives a room for more CPU untilization)
+
 ---
 
-8. Now run with some randomly generated processes using flags -s 1 -l 3:50,3:50 or -s 2 -l 3:50,3:50 or -s 3 -l 3:50, 3:50. See if you can predict how the trace will turn out. What happens when you use the flag -I IO RUN IMMEDIATE versus that flag -I IO RUN LATER? What happens when you use the flag -S SWITCH ON IO versus -S SWITCH ON END?
+8. Now run with some randomly generated processes using flags `-s 1 -l 3:50,3:50` or `-s 2 -l 3:50,3:50` or `-s 3 -l 3:50, 3:50`. See if you can predict how the trace will turn out. What happens when you use the flag `-I IO_RUN_IMMEDIATE` versus that flag `-I IO_RUN_LATER`? What happens when you use the flag `-S SWITCH_ON_IO` versus `-S SWITCH_ON_END`?
+
+**Answer:**
+
+### Part 1
+
+Args: `-s 1 -l 3:50,3:50`
+System behaviors: `SWITCH_ON_IO` && `IO_RUN_LATER`
+
+| Time | Process 1 | Process 2 | Comment                                |
+| ---- | --------- | --------- | -------------------------------------- |
+| 1    | Running   | Ready     |                                        |
+| 2    | Running   | Ready     | I/O Syscall                            |
+| 3    | Blocked   | Running   |                                        |
+| 4    | Blocked   | Running   |                                        |
+| 5    | Blocked   | Running   | End of Process 2                       |
+| 6    | Blocked   | Done      |                                        |
+| 7    | Blocked   | Done      |                                        |
+| 8    | Running   | Done      | I/O Syscall returns                    |
+| 9    | Running   | Done      | I/O Syscall                            |
+| 10   | Blocked   | Done      |                                        |
+| 11   | Blocked   | Done      |                                        |
+| 12   | Blocked   | Done      |                                        |
+| 13   | Blocked   | Done      |                                        |
+| 14   | Blocked   | Done      |                                        |
+| 15   | Running   | Done      | I/O Syscall returns (End of Process 1) |
+
+**Notes:**
+
+- Running with `-S SWITCH_ON_END` will reduce CPU utilization by adding 3 more cycles for process 2 at the end while leaving the CPU idle at cycles 3:5
+- Running with `-I IO_RUN_IMMEDIATE` won't have any impact because all other processes are done while waiting for the first I/O to finish
+
+### Part 2
+
+Args: `-s 2 -l 3:50,3:50`
+System behaviors: `SWITCH_ON_IO` && `IO_RUN_LATER`
+
+| Time | Process 1 | Process 2 | Comment                                    |
+| ---- | --------- | --------- | ------------------------------------------ |
+| 1    | Running   | Ready     | P1: I/O Syscall                            |
+| 2    | Blocked   | Running   |                                            |
+| 3    | Blocked   | Running   | P2: I/O Syscall                            |
+| 4    | Blocked   | Blocked   |                                            |
+| 5    | Blocked   | Blocked   |                                            |
+| 6    | Blocked   | Blocked   |                                            |
+| 7    | Running   | Blocked   | P1: I/O Syscall returns                    |
+| 8    | Running   | Blocked   | P1: I/O Syscall                            |
+| 9    | Blocked   | Running   | P2: I/O Syscall returns                    |
+| 10   | Blocked   | Running   | P2: I/O Syscall                            |
+| 11   | Blocked   | Blocked   |                                            |
+| 12   | Blocked   | Blocked   |                                            |
+| 13   | Blocked   | Blocked   |                                            |
+| 14   | Running   | Blocked   | P1: I/O Syscall returns                    |
+| 15   | Running   | Blocked   | End of Process 1                           |
+| 16   | Done      | Running   | P2: I/O Syscall returns (End of Process 2) |
+
+**Notes:**
+
+- Running with `-S SWITCH_ON_END` will reduce CPU utilization by adding 14 more cycles for process 2 at the end while leaving the CPU idle at cycles (2,3,9,10)
+- Running with `-I IO_RUN_IMMEDIATE` won't have any impact
+
+### Part 3
+
+Args: `-s 3 -l 3:50,3:50`
+System behaviors: `SWITCH_ON_IO` && `IO_RUN_LATER`
+
+| Time | Process 1 | Process 2 | Comment                 |
+| ---- | --------- | --------- | ----------------------- |
+| 1    | Running   | Ready     |                         |
+| 2    | Running   | Ready     | P1: I/O Syscall         |
+| 3    | Blocked   | Running   | P2: I/O Syscall         |
+| 4    | Blocked   | Blocked   |                         |
+| 5    | Blocked   | Blocked   |                         |
+| 6    | Blocked   | Blocked   |                         |
+| 7    | Blocked   | Blocked   |                         |
+| 8    | Running   | Blocked   | P1: I/O Syscall returns |
+| 9    | Running   | Ready     | End of Process 1        |
+| 10   | Done      | Running   | P2: I/O Syscall returns |
+| 11   | Done      | Running   | P2: I/O Syscall         |
+| 12   | Done      | Blocked   |                         |
+| 13   | Done      | Blocked   |                         |
+| 14   | Done      | Blocked   |                         |
+| 15   | Done      | Blocked   |                         |
+| 16   | Done      | Blocked   |                         |
+| 17   | Done      | Running   | P2: I/O Syscall returns |
+| 18   | Done      | Running   | End of Process 2        |
+
+**Notes:**
+
+- Running with `-S SWITCH_ON_END` will reduce CPU utilization by adding 6 more cycles for process 2 at the end while leaving the CPU idle at cycle (3)
+- Running with `-I IO_RUN_IMMEDIATE` , Process 2 at cycle 9 will run instead of process 1, hence it will save a cycle (total running cycles will be 17)
