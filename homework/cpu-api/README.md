@@ -142,7 +142,38 @@ Action: b Exit
 
 ---
 
-4. Write a program that calls fork() and then calls some form of exec() to run the program /bin/ls. See if you can try all of the variants of exec(), including (on Linux) execl(), execle(), execlp(), execv(), execvp(), and execvpe(). Why do you think there are so many variants of the same basic call?
+4. Write a program that calls fork() and then calls some form of exec() to run the program `/bin/ls`. See if you can try all of the variants of exec(), including (on Linux) execl(), execle(), execlp(), execv(), execvp(), and execvpe(). Why do you think there are so many variants of the same basic call?
+
+**Answer:**
+
+```c
+  char* args[3];
+  args[0] = "arg0";
+  args[1] = "arg1";
+  args[2] = NULL;
+  char* env[3];
+  env[0] = "env0=val0";
+  env[1] = "env1=val1";
+  env[2] = NULL;
+
+  // Path-based
+  execl("Path","arg0", "arg1", NULL);
+  execle("Path","arg0", "arg1", NULL, env);
+  execv("Path", args);
+  execve("Path", args, env);
+  // File-based (search for file in PATH env)
+  execlp("File", "arg0", "arg1", NULL);
+  execvp("File", args);
+```
+
+| call     | args                            | env                             | Use `PATH` |
+| -------- | ------------------------------- | ------------------------------- | ---------- |
+| execl()  | null-terminated string arg list | inherited from caller `environ` | no         |
+| execle() | null-terminated string arg list | null-terminated string array    | no         |
+| execv()  | null-terminated string array    | inherited from caller `environ` | no         |
+| execve() | null-terminated string array    | null-terminated string array    | no         |
+| execlp() | null-terminated string arg list | inherited from caller `environ` | yes        |
+| execvp() | null-terminated string array    | inherited from caller `environ` | yes        |
 
 ---
 
