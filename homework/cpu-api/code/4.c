@@ -4,6 +4,8 @@
 #include<fcntl.h>
 #include<sys/wait.h>
 
+extern char **environ;
+
 int Fork(){
   int rc = fork();
 
@@ -25,12 +27,16 @@ int main(){
     exit(EXIT_FAILURE);
   }
 
+  wait(NULL);
+
   if(Fork() == 0){
     fprintf(stdout, "execle: ");
     fflush(stdout);
-    execle("/bin/ls","/bin/ls", NULL, __environ);
+    execle("/bin/ls","/bin/ls", NULL, environ);
     exit(EXIT_FAILURE);
   }
+
+  wait(NULL);
 
   if(Fork() == 0){
     fprintf(stdout, "execv: ");
@@ -39,28 +45,33 @@ int main(){
     exit(EXIT_FAILURE);
   }
 
+  wait(NULL);
+
   if(Fork() == 0){
     fprintf(stdout, "execve: ");
     fflush(stdout);
-    execve("/bin/ls", args, __environ);
+    execve("/bin/ls", args, environ);
   }
+
+  wait(NULL);
 
   if(Fork() == 0){
-    fprintf(stdout, "execl: ");
+    fprintf(stdout, "execlp: ");
     fflush(stdout);
-    execl("/bin/ls", "/bin/ls", NULL);
+    setenv("PATH", "/bin", 1);
+    execlp("ls", "ls", NULL);
   }
+
+  wait(NULL);
 
   if(Fork() == 0){
-    fprintf(stdout, "execl: ");
+    fprintf(stdout, "execvp: ");
     fflush(stdout);
-    execl("/bin/ls", "/bin/ls", NULL);
+    setenv("PATH", "/bin", 1);
+    execvp("ls", args);
   }
- 
 
-  
-  // File-based (search for file in PATH env)
-  execlp("File", "arg0", "arg1", NULL);
-  execvp("File", args);
+  wait(NULL);
+
   return 0;
 }

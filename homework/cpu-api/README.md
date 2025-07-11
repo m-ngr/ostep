@@ -146,6 +146,9 @@ Action: b Exit
 
 **Answer:**
 
+- code at: [./code/4.c](./code/4.c)
+- simple explaination
+
 ```c
   char* args[3];
   args[0] = "arg0";
@@ -179,14 +182,43 @@ Action: b Exit
 
 5. Now write a program that uses wait() to wait for the child process to finish in the parent. What does wait() return? What happens if you use wait() in the child?
 
+**Answer:**
+
+- in parent: it returns the `pid` of the child process that finished excution.
+- in child: it returns -1 to indiciate no child processes to wait on
+
 ---
 
-6. Write a slight modification of the previous program, this time us- ing waitpid() instead of wait(). When would waitpid() be useful?
+6. Write a slight modification of the previous program, this time using waitpid() instead of wait(). When would waitpid() be useful?
+
+**Answer:**
+
+waitpid() can be useful for:
+
+- Non-blocking wait: check exited childs without blocking the parent execution
+- Waiting for specific Process
+- Waiting for any process from a specific group
 
 ---
 
 7. Write a program that creates a child process, and then in the child closes standard output (STDOUT FILENO). What happens if the child calls printf() to print some output after closing the descriptor?
 
+**Answer:**
+it doesn't print anything to the terminal
+
 ---
 
-8. Write a program that creates two children, and connects the stan- dard output of one to the standard input of the other, using the pipe() system call.
+8. Write a program that creates two children, and connects the standard output of one to the standard input of the other, using the pipe() system call.
+
+**Answer:**
+
+- See code at [./code/8.c](./code/8.c)
+- The idea is simple:
+  1. open a new pipe in the parent process
+  2. fork 2 childs
+  3. in child 1 (the writer):
+     a. close pipe read end
+     b. redirect stdout to pipe write end
+  4. in child 2 (the reader):
+     a. close the pipe write end
+     b. redirect stdin to pipe read in
