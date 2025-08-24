@@ -30,7 +30,7 @@ prompt> ./disk.py -h
 | ------------------------------------------------------------------------------------ | ---------------------------------------------------- | ----------- |
 | [Abstraction: Processes](http://www.cs.wisc.edu/~remzi/OSTEP/cpu-intro.pdf)          | Run [process-run.py](cpu-intro)                      | ✅ Finished |
 | [Process API](http://www.cs.wisc.edu/~remzi/OSTEP/cpu-api.pdf)                       | Run [fork.py](cpu-api) and write some code           | ✅ Finished |
-| [Direct Execution](http://www.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf)           | Write some code                                      |
+| [Direct Execution](http://www.cs.wisc.edu/~remzi/OSTEP/cpu-mechanisms.pdf)           | Write some [code](./cpu-mech/)                       | ✅ Finished |
 | [Scheduling Basics](http://www.cs.wisc.edu/~remzi/OSTEP/cpu-sched.pdf)               | Run [scheduler.py](cpu-sched)                        |
 | [MLFQ Scheduling](http://www.cs.wisc.edu/~remzi/OSTEP/cpu-sched-mlfq.pdf)            | Run [mlfq.py](cpu-sched-mlfq)                        |
 | [Lottery Scheduling](http://www.cs.wisc.edu/~remzi/OSTEP/cpu-sched-lottery.pdf)      | Run [lottery.py](cpu-sched-lottery)                  |
