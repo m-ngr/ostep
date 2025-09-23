@@ -6,6 +6,7 @@
 | -------------------------------------- | ----------- |
 | [Unix Utilities](./initial-utilities/) | ✅ Finished |
 | [Reverse](./initial-reverse/)          | ✅ Finished |
+| [Wisconsin Shell](./processes-shell/)  | ✅ Finished |
 
 ## Introduction
 
