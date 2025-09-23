@@ -14,7 +14,7 @@ int paths_count = 0;
 void free_sarr(char** sarr, int len) {
   if (sarr == NULL) return;
   for (int i = 0; i < len; i++) {
-    free(sarr[i]);
+    if (sarr[i]) free(sarr[i]);
   }
   free(sarr);
 }
@@ -48,7 +48,7 @@ char** tokenize(const char* input, const char* delims, int* count) {
   }
   char* tok = strtok(copy, delims);
   while (tok) {
-    if (size >= capacity) {
+    if (size - 1 >= capacity) {
       capacity *= 2;
       tokens = realloc(tokens, capacity * sizeof(char*));
       if (!tokens) {
@@ -62,11 +62,27 @@ char** tokenize(const char* input, const char* delims, int* count) {
 
   free(copy);
   *count = size;
+  tokens[size] = NULL;
   return tokens;
 }
 
+char *trim(char *str) {
+  char *end;
+
+  while (isspace((unsigned char)*str)) str++;
+
+  if (*str == 0) return str;
+
+  end = str + strlen(str) - 1;
+  while (end > str && isspace((unsigned char)*end)) end--;
+  
+  *(end + 1) = '\0';
+
+  return str;
+}
+
 void redirect(char* out_file) {
-  int fd = open(out_file, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+  int fd = open(trim(out_file), O_WRONLY | O_CREAT | O_TRUNC, 0644);
 
   if (fd < 0) {
     print_error();
@@ -146,13 +162,6 @@ void path_command(int argc, char** argv) {
   set_paths(&argv[1], argc - 1);
 }
 
-void debug_command(int argc, char** argv) {
-  printf("Paths: %d\n", paths_count);
-  for (int i = 0; i < paths_count; ++i) {
-    printf("\t%s\n", paths[i]);
-  }
-}
-
 int builtin_command(int argc, char** argv) {
   if (strcasecmp(argv[0], "exit") == 0) {
     exit_command(argc, argv);
@@ -160,8 +169,6 @@ int builtin_command(int argc, char** argv) {
     cd_command(argc, argv);
   } else if (strcasecmp(argv[0], "path") == 0) {
     path_command(argc, argv);
-  } else if (strcasecmp(argv[0], "debug") == 0) {
-    debug_command(argc, argv);
   } else {
     return 0;
   }
@@ -185,28 +192,13 @@ int count_tokens(char* input, char* delims) {
   return count;
 }
 
-char *trim(char *str) {
-  char *end;
-
-  while (isspace((unsigned char)*str)) str++;
-
-  if (*str == 0) return str;
-
-  end = str + strlen(str) - 1;
-  while (end > str && isspace((unsigned char)*end)) end--;
-  
-  *(end + 1) = '\0';
-
-  return str;
-}
-
 char** parse_command(char* command){
   int count = count_char(command, '>');
   if (count > 1) return NULL;
 
   if (count == 0){
     char** res = malloc(sizeof(char*) * 2);
-    res[0] = command;
+    res[0] = strdup(command);
     res[1] = NULL;
     return res;
   } 
@@ -225,8 +217,6 @@ char** parse_command(char* command){
     free_sarr(parts, parts_count);
     return NULL;
   }
-
-  parts[1] = trim(parts[1]);
 
   return parts;
 }
@@ -252,7 +242,7 @@ int run_command(char* command) {
   }
 
   free_sarr(argv, argc);
-  // free_sarr(cmd, 2);
+  free_sarr(cmd, 2);
   return rc;
 }
 
