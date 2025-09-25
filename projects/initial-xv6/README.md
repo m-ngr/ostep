@@ -1,8 +1,13 @@
-
 # Intro To Kernel Hacking
 
-To develop a better sense of how an operating system works, you will also 
-do a few projects *inside* a real OS kernel. The kernel we'll be using is a
+## My solution
+
+See my solution steps [here](solution.md)
+
+---
+
+To develop a better sense of how an operating system works, you will also
+do a few projects _inside_ a real OS kernel. The kernel we'll be using is a
 port of the original Unix (version 6), and is runnable on modern x86
 processors. It was developed at MIT and is a small and relatively
 understandable OS and thus an excellent focus for simple projects.
@@ -11,14 +16,14 @@ This first project is just a warmup, and thus relatively light on work. The
 goal of the project is simple: to add a system call to xv6. Your system call,
 **getreadcount()**, simply returns how many times that the **read()** system
 call has been called by user processes since the time that the kernel was
-booted. 
+booted.
 
 ## Background
 
 If you haven't watched the [discussion
 video](https://www.youtube.com/watch?v=vR6z2QGcoo8), you might want to read
 this [background
-section](https://github.com/remzi-arpacidusseau/ostep-projects/blob/master/initial-xv6/background.md). 
+section](https://github.com/remzi-arpacidusseau/ostep-projects/blob/master/initial-xv6/background.md).
 
 More information about xv6, including a very useful book written by the MIT
 folks who built xv6, is available
@@ -26,11 +31,10 @@ folks who built xv6, is available
 we use a slightly older version of xv6 (for various pedagogical reasons), and
 thus the book may not match our code base exactly.
 
-
 ## Your System Call
 
 Your new system call should look have the following return codes and
-parameters: 
+parameters:
 
 ```c
 int getreadcount(void)
@@ -93,4 +97,3 @@ prompt> ./test-getreadcounts.sh -s
 The other usual testing flags are also available. See [the testing
 README](https://github.com/remzi-arpacidusseau/ostep-projects/blob/master/tester/README.md)
 for details.
-
