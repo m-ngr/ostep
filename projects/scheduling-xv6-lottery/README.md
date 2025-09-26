@@ -1,21 +1,20 @@
-
 # An xv6 Lottery Scheduler
 
 In this project, you'll be putting a new scheduler into xv6. It is called a
 **lottery scheduler**, and the full version is described in [this
 chapter](a,href=http://www.cs.wisc.edu/~remzi/OSFEP/cpu-sched-lottery.pdf) of
-the online book; you'll be building a simpler one.  The basic idea is simple:
+the online book; you'll be building a simpler one. The basic idea is simple:
 assign each running process a slice of the processor based in proportion to
 the number of tickets it has; the more tickets a process has, the more it
 runs. Each time slice, a randomized lottery determines the winner of the
 lottery; that winning process is the one that runs for that time slice.
 
 The objectives for this project:
-* To gain further knowledge of a real kernel, xv6.
-* To familiarize yourself with a scheduler.
-* To change that scheduler to a new algorithm.
-* To make a graph to show your project behaves appropriately.
 
+- To gain further knowledge of a real kernel, xv6.
+- To familiarize yourself with a scheduler.
+- To change that scheduler to a new algorithm.
+- To make a graph to show your project behaves appropriately.
 
 ## Details
 
@@ -39,10 +38,10 @@ pointer is passed into the kernel).
 Most of the code for the scheduler is quite localized and can be found in
 `proc.c`; the associated header file, `proc.h` is also quite useful to
 examine. To change the scheduler, not much needs to be done; study its control
-flow and then try some small changes. 
+flow and then try some small changes.
 
 You'll need to assign tickets to a process when it is created. Specfically,
-you'll need to make sure a child process *inherits* the same number of tickets
+you'll need to make sure a child process _inherits_ the same number of tickets
 as its parents. Thus, if the parent has 10 tickets, and calls **fork()** to
 create a child process, the child should also get 10 tickets.
 
@@ -63,8 +62,8 @@ you see here, in a file you'll have to include called `pstat.h`:
 struct pstat {
   int inuse[NPROC];   // whether this slot of the process table is in use (1 or 0)
   int tickets[NPROC]; // the number of tickets this process has
-  int pid[NPROC];     // the PID of each process 
-  int ticks[NPROC];   // the number of ticks each process has accumulated 
+  int pid[NPROC];     // the PID of each process
+  int ticks[NPROC];   // the number of ticks each process has accumulated
 };
 
 #endif // _PSTAT_H_
@@ -77,7 +76,6 @@ to obtain a pointer that has been passed into the kernel. Note how careful the
 kernel is with pointers passed from user space -- they are a security
 threat(!), and thus must be checked very carefully before usage.
 
-
 ## Graph
 
 Beyond the usual code, you'll have to make a graph for this assignment. The
@@ -86,8 +84,3 @@ over time, where the processes have a 3:2:1 ratio of tickets (e.g., process A
 might have 30 tickets, process B 20, and process C 10). The graph is likely to
 be pretty boring, but should clearly show that your lottery scheduler works as
 desired.
-
-
-
-
-

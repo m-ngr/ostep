@@ -6,10 +6,13 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "pstat.h"
 
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
+  int tickets;
+  int ticks;
 } ptable;
 
 static struct proc *initproc;
@@ -149,6 +152,10 @@ userinit(void)
   acquire(&ptable.lock);
 
   p->state = RUNNABLE;
+  p->ticks = 0;
+  p->tickets = 1;
+  ptable.tickets = 1;
+  ptable.ticks = 0;
 
   release(&ptable.lock);
 }
@@ -215,6 +222,9 @@ fork(void)
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
+  np->ticks = 0;
+  np->tickets = curproc->tickets;
+  ptable.tickets += np->tickets;
 
   release(&ptable.lock);
 
@@ -342,6 +352,8 @@ scheduler(void)
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
+      p->ticks += 1;
+      ptable.ticks += 1;
 
       swtch(&(c->scheduler), p->context);
       switchkvm();
@@ -531,4 +543,41 @@ procdump(void)
     }
     cprintf("\n");
   }
+}
+
+int settickets(int n) {
+  if (n < 1) return -1;
+  struct proc *p = myproc();
+
+  acquire(&ptable.lock);
+  int old = p->tickets;
+  p->tickets = n;
+  ptable.tickets += n - old;
+  release(&ptable.lock);
+
+  return 0;
+}
+
+int getpinfo(struct pstat *ps){
+  if (!ps) return -1;
+
+  acquire(&ptable.lock);
+  for(int i = 0; i < NPROC; ++i){
+    if (ptable.proc[i].state == UNUSED){
+      ps->inuse[i] = 0;
+      ps->pid[i] = 0;
+      ps->tickets[i] = 0;
+      ps->ticks[i] = 0;
+    }else{
+      ps->inuse[i] = 1;
+      ps->pid[i] = ptable.proc[i].pid;
+      ps->tickets[i] = ptable.proc[i].tickets;
+      ps->ticks[i] = ptable.proc[i].ticks;
+    }
+  }
+  ps->all_tickets = ptable.tickets;
+  ps->all_ticks = ptable.ticks;
+  release(&ptable.lock);
+
+  return 0;
 }
