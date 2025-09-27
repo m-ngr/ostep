@@ -106,6 +106,7 @@ extern int sys_uptime(void);
 extern int sys_settickets(void);
 extern int sys_getpinfo(void);
 extern int sys_cpureset(void);
+extern int sys_setpolicy(void);
 
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
@@ -132,6 +133,7 @@ static int (*syscalls[])(void) = {
 [SYS_settickets] sys_settickets,
 [SYS_getpinfo] sys_getpinfo,
 [SYS_cpureset] sys_cpureset,
+[SYS_setpolicy] sys_setpolicy,
 };
 
 void

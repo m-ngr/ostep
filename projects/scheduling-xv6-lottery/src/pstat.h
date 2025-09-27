@@ -1,6 +1,8 @@
 #ifndef _PSTAT_H_
 #define _PSTAT_H_
 
+enum sched_policy;
+
 #include "param.h"
 
 struct pstat {
@@ -11,6 +13,7 @@ struct pstat {
   int ticks[NPROC];    // the number of ticks each process has accumulated
   int all_tickets;
   int all_ticks;
+  int policy;
 };
 
 #endif  // _PSTAT_H_

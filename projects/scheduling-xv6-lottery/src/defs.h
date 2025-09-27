@@ -10,6 +10,7 @@ struct sleeplock;
 struct stat;
 struct superblock;
 struct pstat;
+enum sched_policy;
 
 // bio.c
 void            binit(void);
@@ -193,6 +194,7 @@ void            clearpteu(pde_t *pgdir, char *uva);
 int settickets(int number);
 int getpinfo(struct pstat *);
 int cpureset(void);
+int setpolicy(enum sched_policy p);
 void srand(unsigned int seed);
 int rand(void);
 int rand_range(int a, int b);

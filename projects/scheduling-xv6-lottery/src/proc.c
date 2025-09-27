@@ -7,12 +7,14 @@
 #include "proc.h"
 #include "spinlock.h"
 #include "pstat.h"
+#include "policy.h"
 
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
   int tickets;
   int ticks;
+  enum sched_policy policy;
 } ptable;
 
 static struct proc *initproc;
@@ -156,6 +158,7 @@ userinit(void)
   p->tickets = 1;
   ptable.tickets = 1;
   ptable.ticks = 0;
+  ptable.policy = LOTTERY;
 
   release(&ptable.lock);
 }
@@ -330,82 +333,77 @@ wait(void)
 //  - swtch to start running that process
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
-void
-scheduler_rr(void)
-{
-  struct proc *p;
-  struct cpu *c = mycpu();
+void schedule(struct cpu *c, struct proc *p) {
+  // Switch to chosen process.  It is the process's job
+  // to release ptable.lock and then reacquire it
+  // before jumping back to us.
+  c->proc = p;
+  switchuvm(p);
+  p->state = RUNNING;
+  p->ticks += 1;
+  ptable.ticks += 1;
+
+  swtch(&(c->scheduler), p->context);
+  switchkvm();
+
+  // Process is done running for now.
+  // It should have changed its p->state before coming back.
   c->proc = 0;
-  
-  for(;;){
-    // Enable interrupts on this processor.
-    sti();
+}
 
-    // Loop over process table looking for process to run.
-    acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->state != RUNNABLE)
-        continue;
+/**
+ * Round Robin
+ */
+void scheduler_rr(void) {
+  struct cpu *c = mycpu();
+  struct proc *p;
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-      p->ticks += 1;
-      ptable.ticks += 1;
-
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
-    }
-    release(&ptable.lock);
-
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state != RUNNABLE) continue;
+    schedule(c, p);
   }
 }
 
 /**
  * Lottery Scheduler
  */
-void scheduler(void) {
+void scheduler_ltr(void) {
   struct proc *p;
+  struct cpu *c = mycpu();
+  int winner = rand_range(1, ptable.tickets);
+
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+    if(p->state == UNUSED) continue;
+    winner -= p->tickets;
+    if (winner > 0) continue;
+    if (p->state != RUNNABLE) break;
+    schedule(c, p);
+    break;
+  }
+}
+
+
+/**
+ * Scheduler
+ */
+void scheduler(void) {
   struct cpu *c = mycpu();
   c->proc = 0;
   
-  for(;;){
+  for(;;) {
     sti(); // Enable interrupts on this processor.
     acquire(&ptable.lock);
-    int winner = rand_range(1, ptable.tickets);
 
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-      if(p->state == UNUSED) continue;
-      winner -= p->tickets;
-      if (winner > 0) continue;
-      if (p->state != RUNNABLE) break;
-
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-      p->ticks += 1;
-      ptable.ticks += 1;
-
-      swtch(&(c->scheduler), p->context);
-      switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->proc = 0;
-      break;
+    switch (ptable.policy) {
+      case RR:
+        scheduler_rr();
+        break;
+      default: // LOTTERY
+        scheduler_ltr();
+        break;
     }
-    release(&ptable.lock);
 
+    release(&ptable.lock);
   }
 }
 
@@ -620,6 +618,7 @@ int getpinfo(struct pstat *ps){
   }
   ps->all_tickets = ptable.tickets;
   ps->all_ticks = ptable.ticks;
+  ps->policy = ptable.policy;
   release(&ptable.lock);
 
   return 0;
@@ -633,4 +632,19 @@ int cpureset(void){
   ptable.ticks = 0;
   release(&ptable.lock);
   yield();
+}
+
+int setpolicy(enum sched_policy p) {
+  enum sched_policy policy = -1;
+
+  if(p == LOTTERY) policy = LOTTERY;
+  if(p == RR) policy = RR;
+
+  if (policy == -1) return -1;
+
+  acquire(&ptable.lock);
+  ptable.policy = policy;
+  release(&ptable.lock);
+
+  return cpureset();
 }

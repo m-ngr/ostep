@@ -7,6 +7,7 @@
 #include "mmu.h"
 #include "proc.h"
 #include "pstat.h"
+#include "policy.h"
 
 int
 sys_fork(void)
@@ -109,4 +110,10 @@ int sys_getpinfo(void){
 
 int sys_cpureset(void){
   return cpureset();
+}
+
+int sys_setpolicy(void){
+  enum sched_policy n;
+  if(argint(0, &n) < 0) return -1;
+  return setpolicy(n);
 }

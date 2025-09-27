@@ -1,6 +1,7 @@
 struct stat;
 struct rtcdate;
 struct pstat;
+enum sched_policy;
 
 // system calls
 int fork(void);
@@ -27,6 +28,7 @@ int uptime(void);
 int settickets(int number);
 int getpinfo(struct pstat *);
 int cpureset(void);
+int setpolicy(enum sched_policy policy);
 
 // ulib.c
 int stat(const char*, struct stat*);
