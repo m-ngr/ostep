@@ -1,8 +1,6 @@
 #ifndef _PSTAT_H_
 #define _PSTAT_H_
 
-enum sched_policy;
-
 #include "param.h"
 
 struct pstat {

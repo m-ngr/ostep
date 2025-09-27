@@ -158,7 +158,7 @@ userinit(void)
   p->tickets = 1;
   ptable.tickets = 1;
   ptable.ticks = 0;
-  ptable.policy = LOTTERY;
+  ptable.policy = DEFAULT_POLICY;
 
   release(&ptable.lock);
 }
@@ -382,6 +382,18 @@ void scheduler_ltr(void) {
   }
 }
 
+/**
+ * MLFQ
+ */
+void scheduler_mlfq(void) {
+  struct cpu *c = mycpu();
+  struct proc *p;
+
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->state != RUNNABLE) continue;
+    schedule(c, p);
+  }
+}
 
 /**
  * Scheduler
@@ -397,6 +409,12 @@ void scheduler(void) {
     switch (ptable.policy) {
       case RR:
         scheduler_rr();
+        break;
+      case LOTTERY:
+        scheduler_ltr();
+        break;
+      case MLFQ:
+        scheduler_mlfq();
         break;
       default: // LOTTERY
         scheduler_ltr();
@@ -635,15 +653,10 @@ int cpureset(void){
 }
 
 int setpolicy(enum sched_policy p) {
-  enum sched_policy policy = -1;
-
-  if(p == LOTTERY) policy = LOTTERY;
-  if(p == RR) policy = RR;
-
-  if (policy == -1) return -1;
+  if (!valid_policy(p)) return -1;
 
   acquire(&ptable.lock);
-  ptable.policy = policy;
+  ptable.policy = p;
   release(&ptable.lock);
 
   return cpureset();
