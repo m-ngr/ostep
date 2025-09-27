@@ -46,7 +46,7 @@ void usage(void) {
   printf(1, "Usage:\n");
   printf(1, "  ps             : show process stats\n");
   printf(1, "  ps r           : reset CPU counters, then show process stats\n");
-  printf(1, "  ps set <p>     : set scheduling policy (0=RR, 1=Lottery, 2=MLFQ)\n");
+  printf(1, "  ps set <p>     : set scheduling policy (0=RR, 1=Lottery)\n");
   exit();
 }
 

@@ -383,19 +383,6 @@ void scheduler_ltr(void) {
 }
 
 /**
- * MLFQ
- */
-void scheduler_mlfq(void) {
-  struct cpu *c = mycpu();
-  struct proc *p;
-
-  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-    if(p->state != RUNNABLE) continue;
-    schedule(c, p);
-  }
-}
-
-/**
  * Scheduler
  */
 void scheduler(void) {
@@ -412,9 +399,6 @@ void scheduler(void) {
         break;
       case LOTTERY:
         scheduler_ltr();
-        break;
-      case MLFQ:
-        scheduler_mlfq();
         break;
       default: // LOTTERY
         scheduler_ltr();
