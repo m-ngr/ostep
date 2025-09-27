@@ -2,12 +2,13 @@
 
 ## Projects Status
 
-| Project                                           | Status      |
-| ------------------------------------------------- | ----------- |
-| [Unix Utilities](./initial-utilities/)            | ✅ Finished |
-| [Reverse](./initial-reverse/)                     | ✅ Finished |
-| [Wisconsin Shell](./processes-shell/)             | ✅ Finished |
-| [xv6 Kernel Hacking: System Call](./initial-xv6/) | ✅ Finished |
+| Project                                                     | Status      |
+| ----------------------------------------------------------- | ----------- |
+| [Unix Utilities](./initial-utilities/)                      | ✅ Finished |
+| [Reverse](./initial-reverse/)                               | ✅ Finished |
+| [Wisconsin Shell](./processes-shell/)                       | ✅ Finished |
+| [xv6 Kernel Hacking: System Call](./initial-xv6/)           | ✅ Finished |
+| [xv6 Kernel Hacking: Scheduling](./scheduling-xv6-lottery/) | ✅ Finished |
 
 ## Introduction
 
