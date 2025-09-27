@@ -65,6 +65,9 @@ sys_sleep(void)
 
   if(argint(0, &n) < 0)
     return -1;
+
+  if (n == 0) yield();
+
   acquire(&tickslock);
   ticks0 = ticks;
   while(ticks - ticks0 < n){
@@ -102,4 +105,8 @@ int sys_getpinfo(void){
   if(argptr(0, (void*)&ps, sizeof(*ps)) < 0) return -1;
   
   return getpinfo(ps);
+}
+
+int sys_cpureset(void){
+  return cpureset();
 }

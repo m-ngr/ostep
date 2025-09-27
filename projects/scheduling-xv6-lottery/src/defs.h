@@ -192,3 +192,7 @@ void            clearpteu(pde_t *pgdir, char *uva);
 
 int settickets(int number);
 int getpinfo(struct pstat *);
+int cpureset(void);
+void srand(unsigned int seed);
+int rand(void);
+int rand_range(int a, int b);

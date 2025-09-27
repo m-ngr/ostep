@@ -3,9 +3,9 @@
 #include "user.h"
 #include "pstat.h"
 
-int main(int argc, char *argv[]) {
-  struct pstat ps;
 
+void ps(){
+  struct pstat ps;
   int rc = getpinfo(&ps);
 
   if (rc == -1){
@@ -32,6 +32,13 @@ int main(int argc, char *argv[]) {
       diff
     );
   }
+}
 
+int main(int argc, char *argv[]) {
+  if (argc > 1) {
+    if (strcmp(argv[1], "r") == 0) cpureset();
+  }
+
+  ps();
   exit();
 }

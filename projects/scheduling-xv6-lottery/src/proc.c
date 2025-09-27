@@ -273,6 +273,7 @@ exit(void)
 
   // Jump into the scheduler, never to return.
   curproc->state = ZOMBIE;
+  ptable.tickets -= curproc->tickets;
   sched();
   panic("zombie exit");
 }
@@ -330,7 +331,7 @@ wait(void)
 //  - eventually that process transfers control
 //      via swtch back to the scheduler.
 void
-scheduler(void)
+scheduler_rr(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
@@ -366,6 +367,48 @@ scheduler(void)
 
   }
 }
+
+/**
+ * Lottery Scheduler
+ */
+void scheduler(void) {
+  struct proc *p;
+  struct cpu *c = mycpu();
+  c->proc = 0;
+  
+  for(;;){
+    sti(); // Enable interrupts on this processor.
+    acquire(&ptable.lock);
+    int winner = rand_range(1, ptable.tickets);
+
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if(p->state == UNUSED) continue;
+      winner -= p->tickets;
+      if (winner > 0) continue;
+      if (p->state != RUNNABLE) break;
+
+      // Switch to chosen process.  It is the process's job
+      // to release ptable.lock and then reacquire it
+      // before jumping back to us.
+      c->proc = p;
+      switchuvm(p);
+      p->state = RUNNING;
+      p->ticks += 1;
+      ptable.ticks += 1;
+
+      swtch(&(c->scheduler), p->context);
+      switchkvm();
+
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      c->proc = 0;
+      break;
+    }
+    release(&ptable.lock);
+
+  }
+}
+
 
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
@@ -580,4 +623,14 @@ int getpinfo(struct pstat *ps){
   release(&ptable.lock);
 
   return 0;
+}
+
+int cpureset(void){
+  acquire(&ptable.lock);
+  for(int i = 0; i < NPROC; ++i) {
+    ptable.proc[i].ticks = 0;
+  }
+  ptable.ticks = 0;
+  release(&ptable.lock);
+  yield();
 }

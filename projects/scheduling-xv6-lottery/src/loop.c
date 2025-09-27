@@ -16,7 +16,11 @@ int main(int argc, char *argv[]) {
 
   printf(1, "[%d] started with %d tickets\n", pid, n);
 
-  while(1) {}
+  while(1) {
+    for (volatile int i = 0; i < 1000; i++) {}
+
+    sleep(0);
+  }
 
   exit();
 }
