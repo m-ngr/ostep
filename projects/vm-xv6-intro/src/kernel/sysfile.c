@@ -390,3 +390,15 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+
+int sys_mprotect(void){
+  // TODO: Implement Logic
+  cprintf("mprotect called\n");
+  return 0;
+}
+
+int sys_munprotect(void){
+  // TODO: Implement Logic
+  cprintf("munprotect called\n");
+  return 0;
+}
