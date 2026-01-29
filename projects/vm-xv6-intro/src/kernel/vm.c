@@ -6,6 +6,8 @@
 #include "proc.h"
 #include "elf.h"
 
+#define PTE_FLAGS(pte)  ((uint)(pte) &  0xFFF) // Extract lower 12 bits
+
 extern char data[];  // defined in data.S
 
 static pde_t *kpgdir;  // for use in scheduler()
@@ -312,10 +314,11 @@ copyuvm(pde_t *pgdir, uint sz)
     if(!(*pte & PTE_P))
       panic("copyuvm: page not present");
     pa = PTE_ADDR(*pte);
+    int flags = PTE_FLAGS(*pte);
     if((mem = kalloc()) == 0)
       goto bad;
     memmove(mem, (char*)pa, PGSIZE);
-    if(mappages(d, (void*)i, PGSIZE, PADDR(mem), PTE_W|PTE_U) < 0)
+    if(mappages(d, (void*)i, PGSIZE, PADDR(mem), flags) < 0)
       goto bad;
   }
   return d;
@@ -362,5 +365,43 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
     buf += n;
     va = va0 + PGSIZE;
   }
+  return 0;
+}
+
+// Set protection bits (RO) for a range of pages
+int mprotect(void *addr, int len) {
+  // addr must be page-aligned 
+  if((uint)addr % PGSIZE != 0 || len <= 0) return -1;
+  
+  uint end = (uint)addr + (len * PGSIZE);
+  pte_t *pte;
+
+  for(uint va = (uint)addr; va < end; va += PGSIZE){
+    pte = walkpgdir(proc->pgdir, (void*)va, 0);
+    // Safety Check: If the page isn't mapped, it's an invalid address
+    if(pte == 0 || !(*pte & PTE_P)) return -1;
+    *pte &= ~PTE_W;
+  }
+  // Critical: Flush the TLB so the CPU sees the changes
+  lcr3((proc->pgdir));
+  return 0;
+}
+
+// Remove protection bits for a range of pages
+int munprotect(void *addr, int len) {
+  // addr must be page-aligned 
+  if((uint)addr % PGSIZE != 0 || len <= 0) return -1;
+  
+  uint end = (uint)addr + (len * PGSIZE);
+  pte_t *pte;
+
+  for(uint va = (uint)addr; va < end; va += PGSIZE){
+    pte = walkpgdir(proc->pgdir, (void*)va, 0);
+    // Safety Check: If the page isn't mapped, it's an invalid address
+    if(pte == 0 || !(*pte & PTE_P)) return -1;
+    *pte |= PTE_W;
+  }
+  // Critical: Flush the TLB so the CPU sees the changes
+  lcr3((proc->pgdir));
   return 0;
 }

@@ -392,13 +392,15 @@ sys_pipe(void)
 }
 
 int sys_mprotect(void){
-  // TODO: Implement Logic
-  cprintf("mprotect called\n");
-  return 0;
+  char *addr = 0;
+  int len = 0;
+  if(argint(1, &len) < 0 || argptr(0, &addr, 0) < 0) return -1;
+  return mprotect(addr, len);
 }
 
 int sys_munprotect(void){
-  // TODO: Implement Logic
-  cprintf("munprotect called\n");
-  return 0;
+  char *addr = 0;
+  int len = 0;
+  if(argint(1, &len) < 0 || argptr(0, &addr, 0) < 0) return -1;
+  return munprotect(addr, len);
 }
