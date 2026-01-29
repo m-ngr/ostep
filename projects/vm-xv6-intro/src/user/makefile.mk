@@ -10,6 +10,7 @@ USER_PROGS := \
 	ln\
 	ls\
 	mkdir\
+	mprot_test\
 	null\
 	rm\
 	sh\
