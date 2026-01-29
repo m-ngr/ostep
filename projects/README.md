@@ -9,6 +9,7 @@
 | [Wisconsin Shell](./processes-shell/)                       | ✅ Finished |
 | [xv6 Kernel Hacking: System Call](./initial-xv6/)           | ✅ Finished |
 | [xv6 Kernel Hacking: Scheduling](./scheduling-xv6-lottery/) | ✅ Finished |
+| [xv6 Kernel Hacking: Virtual Memory](./vm-xv6-intro/)       | ✅ Finished |
 
 ## Introduction
 
