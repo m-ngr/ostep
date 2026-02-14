@@ -49,9 +49,9 @@ prompt> ./disk.py -h
 
 # Concurrency
 
-| Chapter                                                                           | What To Do                               | Status |
-| --------------------------------------------------------------------------------- | ---------------------------------------- | ------ |
-| [Threads Intro](http://www.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf)            | Run [x86.py](threads-intro)              |
+| Chapter                                                                           | What To Do                               | Status      |
+| --------------------------------------------------------------------------------- | ---------------------------------------- | ----------- |
+| [Threads Intro](http://www.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf)            | Run [x86.py](threads-intro)              | ✅ Finished |
 | [Thread API](http://www.cs.wisc.edu/~remzi/OSTEP/threads-api.pdf)                 | Run [some C code](threads-api)           |
 | [Locks](http://www.cs.wisc.edu/~remzi/OSTEP/threads-locks.pdf)                    | Run [x86.py](threads-locks)              |
 | [Lock Usage](http://www.cs.wisc.edu/~remzi/OSTEP/threads-locks-usage.pdf)         | Write some code                          |
