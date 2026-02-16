@@ -52,7 +52,7 @@ prompt> ./disk.py -h
 | Chapter                                                                           | What To Do                               | Status      |
 | --------------------------------------------------------------------------------- | ---------------------------------------- | ----------- |
 | [Threads Intro](http://www.cs.wisc.edu/~remzi/OSTEP/threads-intro.pdf)            | Run [x86.py](threads-intro)              | ✅ Finished |
-| [Thread API](http://www.cs.wisc.edu/~remzi/OSTEP/threads-api.pdf)                 | Run [some C code](threads-api)           |
+| [Thread API](http://www.cs.wisc.edu/~remzi/OSTEP/threads-api.pdf)                 | Run [some C code](threads-api)           | ✅ Finished |
 | [Locks](http://www.cs.wisc.edu/~remzi/OSTEP/threads-locks.pdf)                    | Run [x86.py](threads-locks)              |
 | [Lock Usage](http://www.cs.wisc.edu/~remzi/OSTEP/threads-locks-usage.pdf)         | Write some code                          |
 | [Condition Variables](http://www.cs.wisc.edu/~remzi/OSTEP/threads-cv.pdf)         | Run [some C code](threads-cv)            |
