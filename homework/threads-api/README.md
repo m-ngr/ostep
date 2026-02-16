@@ -1,0 +1,59 @@
+# Thread API Homework
+
+Homework [overview](./overview.md)
+
+## Questions
+
+1. First build main-race.c. Examine the code so you can see the (hopefully obvious) data race in the code. Now run helgrind (by typing valgrind --tool=helgrind main-race) to see how it reports the race. Does it point to the right lines of code? What other information does it give to you?
+
+**Answer:**
+
+---
+
+2. What happens when you remove one of the offending lines of code? Now add a lock around one of the updates to the shared variable, and then around both. What does helgrind report in each of these cases?
+
+**Answer:**
+
+---
+
+3. Now let’s look at main-deadlock.c. Examine the code. This code has a problem known as deadlock (which we discuss in much more depth in a forthcoming chapter). Can you see what problem it might have?
+
+**Answer:**
+
+---
+
+4. Now run helgrind on this code. What does helgrind report?
+
+**Answer:**
+
+---
+
+5. Now run helgrind on main-deadlock-global.c. Examine the code; does it have the same problem that main-deadlock.c has? Should helgrind be reporting the same error? What does this tell you about tools like helgrind?
+
+**Answer:**
+
+---
+
+6. Let’s next look at main-signal.c. This code uses a variable (done) to signal that the child is done and that the parent can now continue. Why is this code inefficient? (what does the parent end up spend- ing its time doing, particularly if the child thread takes a long time to complete?)
+
+**Answer:**
+
+---
+
+7. Now run helgrind on this program. What does it report? Is the code correct?
+
+**Answer:**
+
+---
+
+8. Now look at a slightly modified version of the code, which is found in main-signal-cv.c. This version uses a condition variable to do the signaling (and associated lock). Why is this code preferred to the previous version? Is it correctness, or performance, or both?
+
+**Answer:**
+
+---
+
+9. Once again run helgrind on main-signal-cv. Does it report any errors?
+
+**Answer:**
+
+---
