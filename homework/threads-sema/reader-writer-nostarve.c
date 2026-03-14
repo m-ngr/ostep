@@ -8,22 +8,44 @@
 //
 
 typedef struct __rwlock_t {
+    sem_t ds_mutex;
+    sem_t local_mutex;
+    sem_t r_guard;
+    unsigned readers_count;
 } rwlock_t;
 
 
 void rwlock_init(rwlock_t *rw) {
+    sem_init(&rw->local_mutex, 0, 1);
+    sem_init(&rw->ds_mutex, 0, 1);
+    sem_init(&rw->r_guard, 0, 1);
+    rw->readers_count = 0;
 }
 
 void rwlock_acquire_readlock(rwlock_t *rw) {
+    sem_wait(&rw->r_guard);
+    sem_wait(&rw->local_mutex);
+    rw->readers_count += 1;
+    if (rw->readers_count == 1) sem_wait(&rw->ds_mutex);
+    sem_post(&rw->local_mutex);
+    sem_post(&rw->r_guard);
 }
 
 void rwlock_release_readlock(rwlock_t *rw) {
+    sem_wait(&rw->local_mutex);
+    rw->readers_count -= 1;
+    if (rw->readers_count == 0) sem_post(&rw->ds_mutex);
+    sem_post(&rw->local_mutex);
 }
 
 void rwlock_acquire_writelock(rwlock_t *rw) {
+    sem_wait(&rw->r_guard);
+    sem_wait(&rw->ds_mutex);
+    sem_post(&rw->r_guard);
 }
 
 void rwlock_release_writelock(rwlock_t *rw) {
+    sem_post(&rw->ds_mutex);
 }
 
 //

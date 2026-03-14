@@ -13,7 +13,9 @@
 // other integers to track things.
 
 typedef struct __barrier_t {
-    // add semaphores and other information here
+    unsigned int threads;
+    sem_t mutex;
+    sem_t block;
 } barrier_t;
 
 
@@ -21,11 +23,18 @@ typedef struct __barrier_t {
 barrier_t b;
 
 void barrier_init(barrier_t *b, int num_threads) {
-    // initialization code goes here
+    sem_init(&b->block, 0 , 0);
+    sem_init(&b->mutex, 0 , 1);
+    b->threads = num_threads;
 }
 
 void barrier(barrier_t *b) {
-    // barrier code goes here
+    sem_wait(&b->mutex);
+    b->threads = b->threads - 1;
+    if (b->threads == 0) sem_post(&b->block);
+    sem_post(&b->mutex);
+    sem_wait(&b->block);
+    sem_post(&b->block);
 }
 
 //
