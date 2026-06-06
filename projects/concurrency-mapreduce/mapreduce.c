@@ -22,14 +22,10 @@ static int global_num_partitions = 0;
 static Partitioner global_partitioner = NULL;
 
 void MR_Emit(char* key, char* value) {
-  // 1. Determine which partition this key belongs to
   unsigned long p_num = global_partitioner(key, global_num_partitions);
-
-  // 2. Blindly push it to our data store layer
   store_insert(key, value, p_num);
 }
 
-// MapReduce maps this signature directly to the data store's iterator
 char* MR_GetNext(char* key, int partition_number) {
   return store_get_next(key, partition_number);
 }
@@ -44,14 +40,12 @@ void files_init(int argc, char* argv[]) {
 }
 
 char* get_next_file() {
-  char* res;
+  char* res = NULL;
   pthread_mutex_lock(&file_lock);
   if (files_num > 0) {
     res = *files;
     ++files;
     --files_num;
-  } else {
-    res = NULL;
   }
   pthread_mutex_unlock(&file_lock);
   return res;
@@ -77,16 +71,14 @@ void* reducer_worker(void* args) {
   int p_num = r->partition_number;
   while (i < store_get_size(p_num)) {
     char* key = store_get_key_at(p_num, i);
-    // The user's reduce function will internally call MR_GetNext
-    // which automatically increments store's internal index tracking!
     r->reduce(key, MR_GetNext, p_num);
 
-    // Fast-forward our loop index past all identical keys we just reduced
     while (i < store_get_size(p_num) &&
            strcmp(store_get_key_at(p_num, i), key) == 0) {
       i++;
     }
   }
+
   return NULL;
 }
 
