@@ -9,7 +9,7 @@ echo "=== Step 1: Compiling Code ==="
 make clean
 make
 
-if [ ! -d "inputs/set1" ]; then
+if [ ! -d "#inputs/set1" ]; then
     echo "Inputs folder missing. Generating..."
     ./generate_inputs.sh
 fi
@@ -55,19 +55,19 @@ run_matrix() {
 }
 
 # --- Run & Log on 1 Clean Line Per Set ---
-run_matrix "inputs/set1/*.txt" "set1"
+run_matrix "#inputs/set1/*.txt" "set1"
 SET1_CORR=$corr_res; SET1_MEM=$mem_res
 echo -e "SET 1 (Small text, few files): Correctness: $corr_log, Memory: $mem_log"
 
-run_matrix "inputs/set2/*.txt" "set2"
+run_matrix "#inputs/set2/*.txt" "set2"
 SET2_CORR=$corr_res; SET2_MEM=$mem_res
 echo -e "SET 2 (Small text, many files): Correctness: $corr_log, Memory: $mem_log"
 
-run_matrix "inputs/set3/*.txt" "set3"
+run_matrix "#inputs/set3/*.txt" "set3"
 SET3_CORR=$corr_res; SET3_MEM=$mem_res
 echo -e "SET 3 (Large text, few files): Correctness: $corr_log, Memory: $mem_log"
 
-run_matrix "inputs/set4/*.txt" "set4"
+run_matrix "#inputs/set4/*.txt" "set4"
 SET4_CORR=$corr_res; SET4_MEM=$mem_res
 echo -e "SET 4 (Large text, many files): Correctness: $corr_log, Memory: $mem_log"
 

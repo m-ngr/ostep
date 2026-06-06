@@ -4,7 +4,7 @@
 set -e
 
 # Base directory
-INPUTS_DIR="inputs"
+INPUTS_DIR="#inputs"
 
 # Recreate an empty inputs directory structure
 rm -rf "$INPUTS_DIR"

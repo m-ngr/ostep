@@ -11,4 +11,4 @@ clean:
 	rm -f wordcount
 	rm -f output.txt expected.txt raw_output.txt valgrind_log.txt
 	rm -f *_valgrind_failed.txt
-	rm -rf inputs/
+	rm -rf \#inputs/
