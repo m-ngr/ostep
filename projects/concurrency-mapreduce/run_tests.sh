@@ -40,10 +40,11 @@ run_matrix() {
     fi
     rm -f expected.txt output.txt
 
-    # 2. Memory Test (Memcheck)
+  # 2. Memory Test (Memcheck)
     valgrind --leak-check=full ./wordcount $files_path > /dev/null 2> valgrind_log.txt
     
-    if grep -q "ERROR SUMMARY: 0 errors" valgrind_log.txt && grep -q "definitely lost: 0 bytes" valgrind_log.txt; then
+    # Check if there are 0 errors AND either 0 bytes lost OR no leaks possible
+    if grep -q "ERROR SUMMARY: 0 errors" valgrind_log.txt && (grep -q "definitely lost: 0 bytes" valgrind_log.txt || grep -q "no leaks are possible" valgrind_log.txt); then
         mem_res="PASS"
         mem_log="${GREEN}PASS${NC}"
         rm -f valgrind_log.txt

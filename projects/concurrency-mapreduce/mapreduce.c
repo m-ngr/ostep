@@ -67,7 +67,7 @@ void* mapper_worker(void* args) {
 }
 
 typedef struct ReducerArgs {
-  Reducer reducer;
+  Reducer reduce;
   int partition_number;
 } ReducerArgs;
 
@@ -79,7 +79,7 @@ void* reducer_worker(void* args) {
     char* key = store_get_key_at(p_num, i);
     // The user's reduce function will internally call MR_GetNext
     // which automatically increments store's internal index tracking!
-    r->reducer(key, MR_GetNext, p_num);
+    r->reduce(key, MR_GetNext, p_num);
 
     // Fast-forward our loop index past all identical keys we just reduced
     while (i < store_get_size(p_num) &&
@@ -90,18 +90,20 @@ void* reducer_worker(void* args) {
   return NULL;
 }
 
-// Stub for the primary orchestrator function
 void MR_Run(int argc, char* argv[], Mapper map, int num_mappers, Reducer reduce,
             int num_reducers, Partitioner partition) {
-  // 1. Initialize global variables so MR_Emit can use them !
+  // Phase 1: init structures
   global_num_partitions = num_reducers;
   global_partitioner = partition;
 
   files_init(argc, argv);
-  store_init(num_reducers);
+  store_init(global_num_partitions);
 
   pthread_t* mappers = malloc(num_mappers * sizeof(pthread_t));
+  pthread_t* reducers = malloc(num_reducers * sizeof(pthread_t));
+  ReducerArgs* reducer_args = malloc(num_reducers * sizeof(ReducerArgs));
 
+  // Phase 2: run mappers
   for (int i = 0; i < num_mappers; ++i) {
     pthread_create(&mappers[i], NULL, mapper_worker, (void*)map);
   }
@@ -110,17 +112,21 @@ void MR_Run(int argc, char* argv[], Mapper map, int num_mappers, Reducer reduce,
     pthread_join(mappers[i], NULL);
   }
 
-  pthread_t* reducers = malloc(num_reducers * sizeof(pthread_t));
-  ReducerArgs* reducer_args = malloc(num_reducers * sizeof(ReducerArgs));
-
+  // Phase 3: sort & run reducers
   for (int i = 0; i < num_reducers; ++i) {
     store_sort(i);
     reducer_args[i].partition_number = i;
-    reducer_args[i].reducer = reduce;
+    reducer_args[i].reduce = reduce;
     pthread_create(&reducers[i], NULL, reducer_worker, (void*)&reducer_args[i]);
   }
 
   for (int i = 0; i < num_reducers; ++i) {
     pthread_join(reducers[i], NULL);
   }
+
+  // Phase 4: cleanup
+  free(mappers);
+  free(reducers);
+  free(reducer_args);
+  store_free(num_reducers);
 }
