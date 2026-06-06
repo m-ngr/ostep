@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Run MapReduce with 4 Mapper threads and 4 Reducer threads
-  MR_Run(argc, argv, Map, 2, Reduce, 4, MR_DefaultHashPartition);
+  MR_Run(argc, argv, Map, 4, Reduce, 4, MR_DefaultHashPartition);
 
   return 0;
 }
