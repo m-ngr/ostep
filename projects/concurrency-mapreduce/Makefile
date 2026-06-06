@@ -9,6 +9,6 @@ wordcount: main.c mapreduce.c mapreduce.h partition_store.c partition_store.h
 clean:
 	@echo "=== Sweeping Workspace Clean ==="
 	rm -f wordcount
-	rm -f output.txt expected.txt raw_output.txt valgrind_log.txt
-	rm -f *_valgrind_failed.txt
+	rm -f output.txt expected.txt raw_output.txt valgrind_log.txt helgrind_log.txt
+	rm -f *_valgrind_failed.txt *_helgrind_failed.txt
 	rm -rf \#inputs/
