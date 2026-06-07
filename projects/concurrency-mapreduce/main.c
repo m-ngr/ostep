@@ -46,6 +46,10 @@ int main(int argc, char* argv[]) {
     exit(1);
   }
 
+  // FIX: Disable stdout buffering to prevent glibc internal buffer races in
+  // Helgrind
+  setvbuf(stdout, NULL, _IONBF, 0);
+
   // Run MapReduce with 4 Mapper threads and 4 Reducer threads
   MR_Run(argc, argv, Map, 4, Reduce, 4, MR_DefaultHashPartition);
 

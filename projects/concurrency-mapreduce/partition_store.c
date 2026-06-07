@@ -177,15 +177,19 @@ void Partition_insert(Partition* part, char* key, char* value) {
       pthread_mutex_unlock(&part->lock);
       return;
     }
+    int new_slots = part->capacity - old_capacity;
     part->entries = new_entries;
-    memset(&part->entries[old_capacity], 0,
-           (part->capacity - old_capacity) * sizeof(KeyEntry));
+    memset(part->entries + old_capacity, 0, new_slots * sizeof(KeyEntry));
   }
 
   // 3. Populate new KeyEntry and allocate the ValueVector heap instance
   int idx = part->size;
   part->entries[idx].key = strdup(key);
   part->entries[idx].values = ValueVector_make();
+  if (!part->entries[idx].values) {
+    pthread_mutex_unlock(&part->lock);
+    return;  // Out of memory protection
+  }
 
   // Insert payload value
   ValueVector_insert(part->entries[idx].values, value);
@@ -210,34 +214,57 @@ void Partition_sort(Partition* part) {
 
 /**
  * Yields the next unique key string. Moves partition read_index forward.
+ *
+ * NOTE: Locks aren't needed since each partition is assigned to a single
+ * reducer_worker If we need to allow more reducers per partition we will need
+ * locks
  */
 char* Partition_next_key(Partition* part) {
-  if (!part || part->read_index >= part->size) return NULL;
+  if (!part) return NULL;
+
+  // pthread_mutex_lock(&part->lock);
+  if (part->read_index >= part->size) {
+    // pthread_mutex_unlock(&part->lock);
+    return NULL;
+  }
 
   char* key = part->entries[part->read_index].key;
   part->read_index++;
+  // pthread_mutex_unlock(&part->lock);
   return key;
 }
 
 /**
  * Returns the next value string for a specific matched key using ValueVector's
  * sequential reader.
+ *
+ * NOTE: Locks aren't needed since each partition is assigned to a single
+ * reducer_worker If we need to allow more reducers per partition we will need
+ * locks
  */
 char* Partition_next_value(Partition* part, char* key) {
   if (!part || !key) return NULL;
 
+  // pthread_mutex_lock(&part->lock);
+
   int last = part->read_index - 1;
   if (0 <= last && last < part->size) {
     if (strcmp(part->entries[last].key, key) == 0) {
-      return ValueVector_get_next(part->entries[last].values);
+      char* res = ValueVector_get_next(part->entries[last].values);
+      // pthread_mutex_unlock(&part->lock);
+      return res;
     }
   }
 
   for (int i = 0; i < part->size; i++) {
     if (strcmp(part->entries[i].key, key) == 0) {
-      return ValueVector_get_next(part->entries[i].values);
+      char* res = ValueVector_get_next(part->entries[i].values);
+      // pthread_mutex_unlock(&part->lock);
+      return res;
     }
   }
+
+  // pthread_mutex_unlock(&part->lock);
   return NULL;
 }
 

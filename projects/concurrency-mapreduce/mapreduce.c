@@ -75,7 +75,8 @@ void* reducer_worker(void* args) {
 void MR_Run(int argc, char* argv[], Mapper map, int num_mappers, Reducer reduce,
             int num_reducers, Partitioner partition) {
   // Phase 1: init structures
-  MR_Container = Container_make(num_reducers, partition);
+  Partitioner pfn = (partition == NULL) ? MR_DefaultHashPartition : partition;
+  MR_Container = Container_make(num_reducers, pfn);
   files_init(argc, argv);
 
   pthread_t* mappers = malloc(num_mappers * sizeof(pthread_t));
