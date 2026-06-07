@@ -17,17 +17,14 @@ unsigned long MR_DefaultHashPartition(char* key, int num_partitions) {
   return hash % num_partitions;
 }
 
-// Track partition configurations globally within mapreduce.c
-static int global_num_partitions = 0;
-static Partitioner global_partitioner = NULL;
+static Container* MR_Container = NULL;
 
 void MR_Emit(char* key, char* value) {
-  unsigned long p_num = global_partitioner(key, global_num_partitions);
-  store_insert(key, value, p_num);
+  Container_insert(MR_Container, key, value);
 }
 
 char* MR_GetNext(char* key, int partition_number) {
-  return store_get_next(key, partition_number);
+  return Container_next_value(MR_Container, key, partition_number);
 }
 
 pthread_mutex_t file_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -67,29 +64,19 @@ typedef struct ReducerArgs {
 
 void* reducer_worker(void* args) {
   ReducerArgs* r = (ReducerArgs*)args;
-  int i = 0;
-  int p_num = r->partition_number;
-  while (i < store_get_size(p_num)) {
-    char* key = store_get_key_at(p_num, i);
-    r->reduce(key, MR_GetNext, p_num);
-
-    while (i < store_get_size(p_num) &&
-           strcmp(store_get_key_at(p_num, i), key) == 0) {
-      i++;
-    }
+  char* key = NULL;
+  int p = r->partition_number;
+  while ((key = Container_next_key(MR_Container, p)) != NULL) {
+    r->reduce(key, MR_GetNext, p);
   }
-
   return NULL;
 }
 
 void MR_Run(int argc, char* argv[], Mapper map, int num_mappers, Reducer reduce,
             int num_reducers, Partitioner partition) {
   // Phase 1: init structures
-  global_num_partitions = num_reducers;
-  global_partitioner = partition;
-
+  MR_Container = Container_make(num_reducers, partition);
   files_init(argc, argv);
-  store_init(global_num_partitions);
 
   pthread_t* mappers = malloc(num_mappers * sizeof(pthread_t));
   pthread_t* reducers = malloc(num_reducers * sizeof(pthread_t));
@@ -104,9 +91,11 @@ void MR_Run(int argc, char* argv[], Mapper map, int num_mappers, Reducer reduce,
     pthread_join(mappers[i], NULL);
   }
 
-  // Phase 3: sort & run reducers
+  // Phase 3: Sort
+  Container_sort(MR_Container);
+
+  // Phase 4: run reducers
   for (int i = 0; i < num_reducers; ++i) {
-    store_sort(i);
     reducer_args[i].partition_number = i;
     reducer_args[i].reduce = reduce;
     pthread_create(&reducers[i], NULL, reducer_worker, (void*)&reducer_args[i]);
@@ -116,9 +105,9 @@ void MR_Run(int argc, char* argv[], Mapper map, int num_mappers, Reducer reduce,
     pthread_join(reducers[i], NULL);
   }
 
-  // Phase 4: cleanup
+  // Phase 5: cleanup
   free(mappers);
   free(reducers);
   free(reducer_args);
-  store_free(num_reducers);
+  Container_destroy(MR_Container);
 }
