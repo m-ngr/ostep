@@ -44,20 +44,23 @@ func NewUnit(count uint32, b byte) Unit {
 	return buf
 }
 
+// =================================================
+
 type UnitWriter struct {
-	writer *bufio.Writer
-	last   *Unit
+	writer  *bufio.Writer
+	last    Unit
+	hasLast bool
 }
 
 func NewUnitWriter(w io.Writer) *UnitWriter {
 	return &UnitWriter{
-		writer: bufio.NewWriterSize(w, WRITER_SIZE),
-		last:   nil,
+		writer:  bufio.NewWriterSize(w, WRITER_SIZE),
+		hasLast: false,
 	}
 }
 
 func (w *UnitWriter) Flush() {
-	if w.last != nil {
+	if w.hasLast {
 		w.writer.Write(w.last[:])
 	}
 	w.writer.Flush()
@@ -85,7 +88,7 @@ func (w *UnitWriter) join(data []Unit) ([]Unit, error) {
 		return data, nil
 	}
 
-	if w.last != nil {
+	if w.hasLast {
 		if w.last.equal(data[0]) {
 			data[0].add(w.last.getCount())
 		} else {
@@ -96,6 +99,7 @@ func (w *UnitWriter) join(data []Unit) ([]Unit, error) {
 		}
 	}
 
-	w.last = &(data[len(data)-1])
+	w.hasLast = true
+	w.last = data[len(data)-1]
 	return data[0 : len(data)-1], nil
 }

@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-func ReadPipe(filePaths []string) <-chan Chunk[byte] {
-	out := make(chan Chunk[byte], CHAN_SIZE)
+func ReadPipe(filePaths []string) <-chan *Job {
+	out := make(chan *Job, CHAN_SIZE)
 
 	go func() {
 		defer close(out)
@@ -21,7 +21,7 @@ func ReadPipe(filePaths []string) <-chan Chunk[byte] {
 	return out
 }
 
-func readFile(filePath string, counter uint64, out chan<- Chunk[byte]) uint64 {
+func readFile(filePath string, counter uint64, out chan<- *Job) uint64 {
 	file, err := os.Open(filePath)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "pzip: cannot open file")
@@ -32,19 +32,25 @@ func readFile(filePath string, counter uint64, out chan<- Chunk[byte]) uint64 {
 	reader := bufio.NewReader(file)
 
 	for {
-		buff := make([]byte, CHUNK_SIZE)
-		n, err := reader.Read(buff)
+		job := jobPool.Get().(*Job)
+		n, err := job.Read(reader)
 
 		if err != nil && err != io.EOF {
 			fmt.Fprintf(os.Stderr, "pzip read error: %v\n", err)
 			os.Exit(1)
 		} else if err == io.EOF {
+			job.Reset()
+			jobPool.Put(job)
 			break
 		}
 
 		if n > 0 {
-			out <- Chunk[byte]{data: buff[:n], id: counter}
+			job.id = counter
 			counter++
+			out <- job
+		} else {
+			job.Reset()
+			jobPool.Put(job)
 		}
 	}
 

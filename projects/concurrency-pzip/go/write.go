@@ -5,53 +5,56 @@ import (
 	"os"
 )
 
-type ChunkStream struct {
-	channel <-chan Chunk[Unit]
+type JobStream struct {
+	channel <-chan *Job
 	nextId  uint64
-	cache   map[uint64][]Unit
+	cache   map[uint64]*Job
 }
 
-func NewChunkStream(ch <-chan Chunk[Unit]) *ChunkStream {
-	return &ChunkStream{
+func NewJobStream(ch <-chan *Job) *JobStream {
+	return &JobStream{
 		channel: ch,
 		nextId:  0,
-		cache:   make(map[uint64][]Unit),
+		cache:   make(map[uint64]*Job),
 	}
 }
 
-func (s *ChunkStream) next() ([]Unit, bool) {
+func (s *JobStream) next() (*Job, bool) {
 	if v, ok := s.cache[s.nextId]; ok == true {
 		delete(s.cache, s.nextId)
 		s.nextId++
 		return v, true
 	}
 
-	for chunk := range s.channel {
-		if chunk.id == s.nextId {
+	for job := range s.channel {
+		if job.id == s.nextId {
 			s.nextId++
-			return chunk.data, true
+			return job, true
 		} else {
-			s.cache[chunk.id] = chunk.data
+			s.cache[job.id] = job
 		}
 	}
 
 	return nil, false
 }
 
-func WritePipe(in <-chan Chunk[Unit]) {
+func WritePipe(in <-chan *Job) {
 	writer := NewUnitWriter(os.Stdout)
 	defer writer.Flush()
-	stream := NewChunkStream(in)
+	stream := NewJobStream(in)
 
 	for {
-		data, ok := stream.next()
+		job, ok := stream.next()
 		if !ok {
 			break
 		}
 
-		if err := writer.Write(data); err != nil {
+		if err := writer.Write(job.outputChunk); err != nil {
 			fmt.Fprintf(os.Stderr, "pzip write error: %v\n", err)
 			os.Exit(1)
 		}
+
+		job.Reset()
+		jobPool.Put(job)
 	}
 }
