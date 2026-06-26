@@ -29,12 +29,12 @@ C_DIR="$ROOT/src"
 GO_BIN="$ROOT/pzip-go"
 C_BIN="$ROOT/pzip-c"
 
-DATA_ROOT="/media/m-ngr/Data"
+DATA_ROOT="$ROOT"
 
 SUITE_DIR="$DATA_ROOT/test-suits"
 RESULT_DIR="$SUITE_DIR/results"
 
-THREE_GB=1221225472
+LARGE_SIZE=1221225472
 
 ################################################################################
 # Colors
@@ -276,7 +276,7 @@ generate_tests() {
     do
         create_random_file \
             "$SUITE_DIR/test5/huge$i.dat" \
-            "$THREE_GB"
+            "$LARGE_SIZE"
     done
 
     ############################################################################
@@ -293,13 +293,13 @@ generate_tests() {
 
             create_zero_file \
                 "$SUITE_DIR/test6/large$i.dat" \
-                "$THREE_GB"
+                "$LARGE_SIZE"
 
         else
 
             create_random_file \
                 "$SUITE_DIR/test6/large$i.dat" \
-                "$THREE_GB"
+                "$LARGE_SIZE"
 
         fi
 

@@ -88,3 +88,53 @@ files correctly.
 
 If you pass the correctness tests, your code will be tested for performance;
 higher performance will lead to better scores.
+
+## Running the tests
+
+### Running the OSTEP tests
+
+#### Run tests on the C code
+
+```sh
+./test-pzip.sh c
+```
+
+#### Run tests on the Go code
+
+```sh
+./test-pzip.sh go
+```
+
+---
+
+### Running the ptests
+
+#### Generate Tests
+
+```sh
+./ptest gen
+```
+
+#### Run tests on C Code
+
+```sh
+./ptest c
+```
+
+#### Run tests on Go Code
+
+```sh
+./ptest go
+```
+
+#### Compare the results of C & Go
+
+```sh
+./ptest diff
+```
+
+#### Compare the performance of C & Go
+
+```sh
+./ptest perf
+```
