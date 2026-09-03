@@ -17,7 +17,7 @@ c:
 
 # Target: make go
 go:
-	cd go && go build -o ../xcheck main.go
+	cd go && go build -o ../xcheck
 
 # ------------------------------------------------------------------------------
 # Testing Targets
