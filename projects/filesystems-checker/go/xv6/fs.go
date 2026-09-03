@@ -8,7 +8,8 @@ package xv6
 - Block 0: empty (unused)
 - Block 1: Super Block
 - Block 2-31: Log
-- Block 32-57: Inode Table
+- Block 32-56: Inode Table
+- Block 57: empty (unused)
 - Block 58: Bitmap
 - Block 59-999: Data
 ## Notes:

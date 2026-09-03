@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"xcheck/xv6fs"
 
 	"golang.org/x/sys/unix"
 )
@@ -21,9 +22,13 @@ func main() {
 	data := mmap(file)
 	defer unix.Munmap(data)
 
-	fs, _ := NewXv6FS(data)
+	fs, err := xv6fs.NewFS(data)
 
-	fsCheck(fs)
+	if err != nil {
+		errorExit("couldn't init the FS Reader")
+	}
+
+	newfsCheck(fs)
 }
 
 func mmap(file *os.File) []byte {
