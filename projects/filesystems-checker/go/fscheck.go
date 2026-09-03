@@ -5,7 +5,7 @@ import (
 	"xcheck/xv6fs"
 )
 
-func newfsCheck(fs *xv6fs.FS) {
+func fsCheck(fs *xv6fs.FS) {
 	checkInodes(fs)
 	validateRoot(fs)
 	validateDirs(fs, 1, 1)

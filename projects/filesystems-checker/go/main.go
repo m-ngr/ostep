@@ -28,7 +28,7 @@ func main() {
 		errorExit("couldn't init the FS Reader")
 	}
 
-	newfsCheck(fs)
+	fsCheck(fs)
 }
 
 func mmap(file *os.File) []byte {
