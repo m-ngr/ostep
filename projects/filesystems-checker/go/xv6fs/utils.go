@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-func MapSlice[T, U any](input []T, convert func(T) U) []U {
+func Map[T, U any](input []T, convert func(T) U) []U {
 	output := make([]U, len(input))
 	for i, val := range input {
 		output[i] = convert(val)

@@ -27,11 +27,7 @@ func (n Inode) IsDevice() bool {
 }
 
 func (n Inode) DirectAddrs() []BlockAddr {
-	return n.Addrs[:xv6.NDIRECT]
-}
-
-func (n Inode) UsedDirectAddrs() []BlockAddr {
-	return Filter(n.DirectAddrs(), func(a BlockAddr) bool {
+	return Filter(n.Addrs[:xv6.NDIRECT], func(a BlockAddr) bool {
 		return a > 0
 	})
 }

@@ -8,6 +8,12 @@ import (
 type INum = uint16
 
 var ErrInvalidAddr = errors.New("Invalid Block Address")
+var ErrInvalidINum = errors.New("Invalid Inode Number")
+var ErrNotDir = errors.New("Inode isn't a dir")
+
+const RootINum = 1
+
+type WalkDirFunc = func(parent INum, dir INum, ents []DirEnt)
 
 type FS struct {
 	Reader BlockReader
@@ -31,12 +37,8 @@ func NewFS(data []byte) (*FS, error) {
 	}, nil
 }
 
-func (fs FS) Root() Inode {
-	return fs.Inodes[1]
-}
-
-func (fs FS) WalkDirs(cb func(parent INum, dir INum, entries []DirEnt)) {
-	walkDirs(&fs, 1, 1, cb)
+func (fs FS) WalkDirs(fn WalkDirFunc) {
+	walkDirs(&fs, RootINum, RootINum, fn)
 }
 
 func (fs FS) IsValidAddr(a BlockAddr) bool {
@@ -57,18 +59,18 @@ func (fs FS) ReadAddrs(addr BlockAddr) ([]BlockAddr, error) {
 
 func (fs FS) ReadDirEnts(i INum) ([]DirEnt, error) {
 	if !fs.IsValidINum(i) {
-		return nil, ErrInvalidAddr
+		return nil, ErrInvalidINum
 	}
 
 	inode := fs.Inodes[i]
 
 	if inode.IsDir() == false {
-		return nil, errors.New("Inode isn't a dir")
+		return nil, ErrNotDir
 	}
 
 	dirs := make([]DirEnt, 0, 2)
 
-	for _, addr := range fs.GetValidAddrs(i) {
+	for _, addr := range fs.getInodeAddrs(&inode) {
 		d, err := fs.Reader.Read(addr).ToDirEnts()
 		if err != nil {
 			panic(err)
@@ -94,25 +96,14 @@ func (fs FS) IsAllocated(addr BlockAddr) (bool, error) {
 	return bit != 0, nil
 }
 
-func (fs FS) GetValidAddrs(i INum) []BlockAddr {
-	inode := fs.Inodes[i]
-	addrs := inode.UsedDirectAddrs()
+func (fs FS) DataUsageMap() map[BlockAddr]bool {
+	m := make(map[BlockAddr]bool, 0)
 
-	indirAddr, used := inode.IndirectBlockAddr()
-
-	if used {
-		indirect, _ := fs.ReadAddrs(indirAddr)
-		addrs = append(addrs, indirect...)
-	}
-
-	return addrs
-}
-
-func (fs FS) DataUsageMap() map[uint32]bool {
-	m := make(map[uint32]bool, 0)
-
-	for i, inode := range fs.Inodes {
-		addrs := fs.GetValidAddrs(INum(i))
+	for _, inode := range fs.Inodes {
+		if !inode.IsUsed() {
+			continue
+		}
+		addrs := fs.getInodeAddrs(&inode)
 
 		for _, addr := range addrs {
 			m[addr] = true
@@ -124,6 +115,22 @@ func (fs FS) DataUsageMap() map[uint32]bool {
 	}
 
 	return m
+}
+
+func (fs FS) getInodeAddrs(inode *Inode) []BlockAddr {
+	addrs := inode.DirectAddrs()
+
+	indirAddr, used := inode.IndirectBlockAddr()
+
+	if used {
+		indirect, err := fs.ReadAddrs(indirAddr)
+		if err != nil {
+			panic(err)
+		}
+		addrs = append(addrs, indirect...)
+	}
+
+	return addrs
 }
 
 // ==============================================
@@ -149,24 +156,23 @@ func parseFS(reader BlockReader) (SuperBlock, []byte, []Inode, error) {
 	return super, bitmap, inodes, nil
 }
 
-func walkDirs(fs *FS, dir INum, parent INum, cb func(parent INum, dir INum, entries []DirEnt)) {
+func walkDirs(fs *FS, parent INum, dir INum, fn WalkDirFunc) {
 	ents, err := fs.ReadDirEnts(dir)
-
 	if err != nil {
 		panic(err)
 	}
 
-	cb(parent, dir, ents)
+	fn(parent, dir, ents)
 
 	for _, ent := range ents {
-		if ent.DirName() == "." || ent.DirName() == ".." {
+		if ent.Inum == parent || ent.Inum == dir {
 			continue
 		}
 
 		inode := fs.Inodes[ent.Inum]
 
 		if inode.IsDir() {
-			walkDirs(fs, ent.Inum, dir, cb)
+			walkDirs(fs, dir, ent.Inum, fn)
 		}
 	}
 }

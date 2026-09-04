@@ -45,7 +45,7 @@ func (b Block) ToInodes() ([]Inode, error) {
 	if err != nil {
 		return nil, err
 	}
-	return MapSlice(di, func(d xv6.Dinode) Inode { return NewInode(d) }), nil
+	return Map(di, func(d xv6.Dinode) Inode { return NewInode(d) }), nil
 }
 
 func (b Block) ToDirEnts() ([]DirEnt, error) {
@@ -54,7 +54,7 @@ func (b Block) ToDirEnts() ([]DirEnt, error) {
 		return nil, err
 	}
 
-	dirents := MapSlice(
+	dirents := Map(
 		Filter(de, func(e xv6.Dirent) bool { return e.Inum > 0 }),
 		func(e xv6.Dirent) DirEnt { return DirEnt(e) },
 	)
